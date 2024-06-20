@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { customFetch } from "../utils/intex";
 interface Products {
   limit: number;
   products: [];
@@ -13,6 +14,12 @@ interface Product {
   id: number;
   title: string;
 }
+
+export let loader = async () => {
+  let req = await customFetch("");
+  let products = req.data;
+  return { products };
+};
 function Home() {
   const [products, setProducts] = useState<Products | null>(null);
 

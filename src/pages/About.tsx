@@ -1,45 +1,84 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Product } from "../components/interfase";
+import { useLoaderData } from "react-router-dom";
+import { customFetch, formatPrice } from "../utils/intex";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../components/store";
+import { addAmount } from "../components/amountSlice";
+
+export let loader = async ({ params }: any) => {
+  let req = await customFetch(`/${params.id}`);
+  let product = req.data;
+  return { product };
+};
 
 function About() {
-  const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await fetch(`https://dummyjson.com/products/${id}`);
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        setProduct(data);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [id]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  let [amout, setAmout] = useState(1);
+  let { product } = useLoaderData() as { product: Product };
+  let { id, price, title, description, images, rating, category } = product;
+  const count: number = useSelector((state: RootState) => state.counter.amout);
+  const dispatch = useDispatch();
+  console.log(count);
 
   return (
-    <div className="align-element flex">
-      <div>
-        {" "}
-        <h1>{product.title}</h1>
-        <h2>{product.brand}</h2>
-        <p>{product.content}</p>
-        <p>Status: {product.availabilityStatus}</p>
-        <p>Description: {product.description}</p>
+    <div className=" px-20 flex gap-10 mt-20 items-center justify-center align-element">
+      <div className="carousel carousel-center max-w-md p-4 space-x-4 bg-neutral rounded-box text-center">
+        {images.map((img: string) => {
+          return (
+            <div key={id} className="carousel-item w-full size-96  ">
+              <img
+                className=" object-contain bg-white rounded-xl mr-5 w-96  "
+                src={img}
+                alt={title}
+              />
+            </div>
+          );
+        })}
       </div>
-      <div>
-        <img src={product.images} alt="" />
+      <div className="flex flex-col gap-5 justify-start">
+        <h1 className=" text-4xl font-bold">{title}</h1>
+        <h5 className="text-2xl opacity-50 font-bold  capitalize">
+          {category}
+        </h5>
+        <p className="text-xl ">{description}</p>
+
+        <div className=" w-full flex gap-5 justify-between items-start font-medium  flex-col">
+          <p className=" text-2xl  ">Price: {formatPrice(price)}</p>
+          <p className=" text-2xl "> Rating: {rating}</p>
+        </div>
+        <div className=" flex items-center gap-10 mt-10">
+          <div className="flex gap-5 items-center  borde   ">
+            <button
+              onClick={() => {
+                setAmout(amout - 1);
+              }}
+              disabled={amout == 1 ? true : false}
+              className="btn"
+            >
+              -
+            </button>
+            <p className="font-bold text-xl">{amout}</p>
+            <button
+              onClick={() => {
+                setAmout(amout + 1);
+              }}
+              className="btn"
+            >
+              +
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={() => {
+                dispatch(addAmount({ ...product, total: amout }));
+                setAmout(0);
+              }}
+              className=" btn btn-success  text-white"
+            >
+              Add Amout
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
